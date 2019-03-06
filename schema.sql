@@ -45,9 +45,33 @@ create table Artists (
     comment text
 );
 
+drop table if exists Labels;
+create table Labels (
+    label_id integer primary key not null,
+
+    added_date text, /* date added to MA */
+    modified_date text, /* date modified on MA */
+    insert_date text, /* date entry in DB inserted/updated */
+
+    label text not null,
+    label_url not null
+);
+
+drop table if exists BandLabel;
+create table BandLabel (
+    id integer primary key autoincrement,
+    
+    insert_date text, /* date entry in DB inserted/updated */
+    
+    band_id integer not null,
+    label_id integer not null,
+    
+    foreign key(band_id) references Bands(band_id),
+    foreign key(label_id) references Labels(label_id)
+);
+
 drop table if exists Reviews;
 create table Reviews (
-    review_id integer primary key not null,
     band_id integer not null, /* id into Bands table */
     album_id integer not null, /* id into Albums table */
     user_id integer not null, /* id into Users table */
@@ -55,10 +79,12 @@ create table Reviews (
     modified_date text, /* date modified on MA */
     insert_date text, /* date entry in DB inserted/updated */
     
-    review text, /* the full review text */
+    review_title text,
     review_url text,
     review_percentage integer,
+    review text, /* the full review text */
     
+    primary key (band_id,album_id,user_id),
     foreign key(band_id) references Bands(band_id),
     foreign key(album_id) references Albums(album_id),
     foreign key(user_id) references Users(user_id)
@@ -66,7 +92,7 @@ create table Reviews (
 
 drop table if exists Users;
 create table Users (
-    user_id integer primary key autoincrement, /* MA doesn't appear to have an ID for users */
+    user_id integer primary key not null, /* MA shows user ID in review URL; can also get it from user's page */
 
     insert_date text, /* date entry in DB inserted/updated */
 

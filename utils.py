@@ -1,10 +1,40 @@
+import csv
+import logging
+logger = logging.getLogger(__name__)
 
+import tqdm
 
-def get_ID_from_band_URL(band_url):
-    return int(band_url.split('/')[-1])
+__all__ = ['get_band_id_from_band_url',
+           'get_album_id_from_album_url',
+           'get_user_id_from_review_url',
+           'read_csv_to_list_of_dicts',
+           'tqdmForLogging',
+           ]
 
-def get_ID_from_album_URL(album_url):
-    return int(album_url.split('/')[-1])
+def get_band_id_from_band_url(band_url):
+    # IDs are positive integers, so we can use str.isdigit()
+    band_id = band_url.split('/')[-1]
+    if not band_id.isdigit():
+        return None
+    else:
+        return int(band_id)
 
-def get_ID_from_review_URL(review_url):
-    return int(review_url.split('/')[-1])
+def get_album_id_from_album_url(album_url):
+    return get_band_id_from_band_url(album_url)
+
+def get_user_id_from_review_url(review_url):
+    return get_band_id_from_band_url(review_url)
+
+def read_csv_to_list_of_dicts(csv_filename):
+    with open(csv_filename, 'r') as f:
+        reader = csv.DictReader(f)
+        csv_list = [row for row in reader]
+    return csv_list
+
+# This dude exists only to specify end="" instead of end="\n"
+# TODO: There's got to be a better way... somelike like functools.partialmethod?
+#       Or make a logging.StreamHandler
+class tqdmForLogging(tqdm.tqdm):
+    @classmethod
+    def write(cls, s, file=None, end="", nolock=False):
+        super().write(s, file, end, nolock)

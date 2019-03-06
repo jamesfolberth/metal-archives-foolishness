@@ -1,10 +1,12 @@
 import argparse, datetime, os, json, csv
+import logging
+logger = logging.getLogger(__name__)
 
 import bs4
 
 from baseScraper import BaseScraper
  
-class BandScraper(BaseScraper):
+class BandListScraper(BaseScraper):
     """
     Collects brief band info from https://www.metal-archives.com/browse/letter
     """
@@ -19,7 +21,7 @@ class BandScraper(BaseScraper):
         if not outfile:
             date = datetime.datetime.utcnow()
             date_str = date.strftime('%Y%m%d_%H%M%S')
-            outfile = 'metal-archives_bands_' + date_str + '.csv'
+            outfile = 'metal-archives_band_list_' + date_str + '.csv'
         self.outfile = str(outfile)
         print('Will output band data to', self.outfile)
         
@@ -167,8 +169,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    scraper = BandScraper(outfile=args.outfile,
-                          test=args.test,
-                          )
+    scraper = BandListScraper(outfile=args.outfile,
+                              test=args.test,
+                              )
     scraper.run()
     

@@ -1,5 +1,6 @@
-
 import datetime, time
+import logging
+logger = logging.getLogger(__name__)
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -12,7 +13,7 @@ class BaseScraper(object):
         # from their robots.txt
         self.crawl_delay = 3 # seconds
         
-        print('Creating Session')
+        logger.debug('Creating requests.Session')
         self.session = requests.Session()
         
         # https://stackoverflow.com/a/35636367
@@ -23,7 +24,7 @@ class BaseScraper(object):
         self.session.headers['user-agent'] = 'bot'
         
         self._last_request_time = None
-    
+        
     def sessionGet(self, *args, **kwargs):
         """ Call self.session.get(*args, **kwargs) """
         if self._last_request_time is not None:
@@ -39,5 +40,5 @@ class BaseScraper(object):
         return response
     
     def close(self):
-        print('Closing Session')
+        logger.debug('Closing requests.Session')
         self.session.close()

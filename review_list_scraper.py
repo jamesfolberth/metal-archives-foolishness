@@ -1,10 +1,12 @@
 import argparse, datetime, os, json, csv
+import logging
+logger = logging.getLogger(__name__)
 
 import bs4
 
 from baseScraper import BaseScraper
  
-class ReviewScraper(BaseScraper):
+class ReviewListScraper(BaseScraper):
     """
     Collects brief review info from https://www.metal-archives.com/review/browse
     """
@@ -19,7 +21,7 @@ class ReviewScraper(BaseScraper):
         if not outfile:
             date = datetime.datetime.utcnow()
             date_str = date.strftime('%Y%m%d_%H%M%S')
-            outfile = 'metal-archives_reviews_' + date_str + '.csv'
+            outfile = 'metal-archives_review_list_' + date_str + '.csv'
         self.outfile = str(outfile)
         print('Will output band data to', self.outfile)
         
@@ -123,7 +125,8 @@ class ReviewScraper(BaseScraper):
         
         fieldnames = ('year', 'month', 'day', 'hour', 'minute',
                       'band', 'band_url', 'album', 'album_url',
-                      'review', 'review_url', 'reviewer', 'reviewer_url')
+                      'review_title', 'review_url', 'review_percentage',
+                      'reviewer', 'reviewer_url')
         self.outfile_writer = csv.DictWriter(self.outfile_handle, fieldnames)
         self.outfile_writer.writeheader()
     
@@ -146,13 +149,15 @@ class ReviewScraper(BaseScraper):
             day = int(review[0].split()[1])
             hour, minute = map(int, review[6].split(':'))
             
+            review_percentage = int(review[4][:-1])
+            
             review_soup = bs4.BeautifulSoup(review[1], 'html5lib')
             band_soup = bs4.BeautifulSoup(review[2], 'html5lib')
             album_soup = bs4.BeautifulSoup(review[3], 'html5lib')
             reviewer_soup = bs4.BeautifulSoup(review[5], 'html5lib')
             
             review_url = review_soup.a.get('href')
-            review = review_soup.a.get('title')
+            review_title = review_soup.a.get('title')
             
             band_url = band_soup.a.get('href')
             band = band_soup.a.text
@@ -172,8 +177,9 @@ class ReviewScraper(BaseScraper):
                                           'band_url': band_url,
                                           'album': album,
                                           'album_url': album_url,
-                                          'review': review,
+                                          'review_title': review_title,
                                           'review_url': review_url,
+                                          'review_percentage': review_percentage,
                                           'reviewer': reviewer,
                                           'reviewer_url': reviewer_url})
 
@@ -192,9 +198,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    scraper = ReviewScraper(outfile=args.outfile,
-                            start=args.start,
-                            stop=args.stop,
-                            )
+    scraper = ReviewListScraper(outfile=args.outfile,
+                                start=args.start,
+                                stop=args.stop,
+                                )
     scraper.run()
     
