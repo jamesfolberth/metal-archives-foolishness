@@ -3,3 +3,4 @@ __pycache__
 *.csv
 .*project
 .ipynb_checkpoints
+*.db
