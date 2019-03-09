@@ -1,14 +1,11 @@
 import unittest, re, string
 import sqlite3 as lite
 
+from utils import flatten
 
 def allgrams(text):
     tokens = text.split(' ')
     return tokens
-
-def flatten(iterable):
-    return [item for subiterable in iterable for item in subiterable]
-
 
 class GenreTokenizer(object):
     """
@@ -499,8 +496,5 @@ class Test(unittest.TestCase):
             print('test_tokens =', test_tokens)
             print('='*40)
     
-    def testRun(self):
-        method = 'split2'
-
 if __name__ == '__main__':
     unittest.main()

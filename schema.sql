@@ -11,6 +11,7 @@ create table Bands (
     country text,
     status text,
     genre text,
+    genre_tokens text,
     themes text,
     comment text
 );

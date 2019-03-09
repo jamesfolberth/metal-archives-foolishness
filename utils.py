@@ -8,6 +8,7 @@ __all__ = ['get_band_id_from_band_url',
            'get_album_id_from_album_url',
            'get_user_id_from_review_url',
            'read_csv_to_list_of_dicts',
+           'flatten',
            'tqdmForLogging',
            ]
 
@@ -31,6 +32,13 @@ def read_csv_to_list_of_dicts(csv_filename):
         csv_list = [row for row in reader]
     return csv_list
 
+def flatten(iterable):
+    """
+    Flaten out a list of lists.  For example
+    [['a','b'], ['c']] -> ['a', 'b', 'c']
+    """
+    return [item for subiterable in iterable for item in subiterable]
+
 # This dude exists only to specify end="" instead of end="\n"
 # TODO: There's got to be a better way... somelike like functools.partialmethod?
 #       Or make a logging.StreamHandler
@@ -38,3 +46,5 @@ class tqdmForLogging(tqdm.tqdm):
     @classmethod
     def write(cls, s, file=None, end="", nolock=False):
         super().write(s, file, end, nolock)
+        
+        
