@@ -185,7 +185,8 @@ class InsertBasicInfo(object):
                         (reviewer_id,reviewer,reviewer_url))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Scrape metal-archives.com band pages.')
+    parser = argparse.ArgumentParser(description='Insert basic info into database '
+                                     'from band list and reviews list.')
     parser.add_argument('database', type=str,
                         help='Filename of sqlite3 database; must already exist')
     parser.add_argument('band_list', type=str,

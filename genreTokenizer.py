@@ -1,5 +1,7 @@
 import unittest, re, string
 import sqlite3 as lite
+import logging
+logger = logging.getLogger(__name__)
 
 from utils import flatten
 
@@ -12,6 +14,9 @@ class GenreTokenizer(object):
     Try to tokenize those pesky genre texts.
     """
     def __init__(self, method='bag-of-words'):
+        if method == 'split2':
+            log.warning('split2 is a WIP')
+            
         self.whitespace_regex = re.compile(r'\s+')
         self.paren_regex = re.compile(r'\(.*?\)')
         self.split_regex = re.compile(r"""[/]+""")

@@ -30,7 +30,9 @@ def main(database, method='bag-of-words'):
                            (tokens_str, band_id))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Tokenize the genre text for each band in the database.')
+    parser = argparse.ArgumentParser(description='Tokenize the genre text for each '
+                                     'band in the database.  This updates the '
+                                     '`genre_tokens` column.')
     parser.add_argument('database', type=str,
                         help='Filename of sqlite3 database; must already exist')
     

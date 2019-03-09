@@ -49,11 +49,21 @@ sqlite3 database.db < schema.sql # create the db if it doesn't already exist
 python insert_basic_info.py database.db metal-archives_band_list_YYYYMMDD_HHMMSS.csv metal-archives_review_list_YYYYMMDD_HHMMSS.csv
 ```
 
+We can go ahead and tokenize the genre texts, which are conveniently included in the band list.
+```
+python genre_tokenizer.py database.db
+```
+
 Now the database exists, but it only has some of the info we might want.
 For example, we only have albums that have been reviewed, we only have users
 that have submitted reviews, we don't have extra info from scraping the band page, etc.
 It will take scraping each bands page to get more complete info.
 In particular, the similarity score (users' votes) seems interesting.
+Scrape the band page (which requires 
+NOTE: this will take many days!
+```
+python band_page_scraper.py database.db
+```
 
 But we can still probably do some interesting things with just the data we have at this point.
 
