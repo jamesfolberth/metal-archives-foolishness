@@ -13,6 +13,7 @@ create table Bands (
     genre text,
     genre_tokens text,
     themes text,
+    themes_tokens text,
     comment text
 );
 
@@ -60,13 +61,12 @@ create table Labels (
 
 drop table if exists BandLabel;
 create table BandLabel (
-    id integer primary key autoincrement,
-    
-    insert_date text, /* date entry in DB inserted/updated */
-    
     band_id integer not null,
     label_id integer not null,
+
+    insert_date text, /* date entry in DB inserted/updated */
     
+    primary key (band_id, label_id), 
     foreign key(band_id) references Bands(band_id),
     foreign key(label_id) references Labels(label_id)
 );
@@ -103,21 +103,20 @@ create table Users (
 
 drop table if exists Similarities;
 create table Similarities (
-    id integer primary key autoincrement, /* don't really care about this id */
+    band_id integer not null, /* id into Bands table */
+    similar_to_id integer not null, /* id into Bands table */
 
     insert_date text, /* date entry in DB inserted/updated */
 
-    band_id integer not null, /* id into Bands table */
-    similar_to_id integer not null, /* id into Bands table */
     score integer not null, /* similarity score = users' votes */
-
+    
+    primary key (band_id, similar_to_id),
     foreign key(band_id) references Bands(band_id),
     foreign key(similar_to_id) references Bands(band_id)
 );
 
 drop table if exists BandLineup;
 create table BandLineup (
-    id integer primary key autoincrement,
     band_id integer not null, /* id into Bands table */
     artist_id integer not null, /* id into Artists table */
  
@@ -127,7 +126,10 @@ create table BandLineup (
     current_live_member integer,
     past_member integer,
     past_live_member integer,
+    last_known_member integer,
+    last_known_live_member integer,
     
+    primary key (band_id, artist_id),
     foreign key(band_id) references Bands(band_id),
     foreign key(artist_id) references Artists(artist_id)
 );

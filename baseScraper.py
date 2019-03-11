@@ -20,6 +20,10 @@ class BaseScraper(object):
         retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
         self.session.mount('https://', HTTPAdapter(max_retries=retries))
         
+        # Really don't need to hear about connections being brought up again after server has closed it
+        # https://stackoverflow.com/a/37678627
+        logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+        
         # metal-archives requires us to have a user agent?
         self.session.headers['user-agent'] = 'bot'
         

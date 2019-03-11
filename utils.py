@@ -1,4 +1,4 @@
-import csv
+import csv, functools, time
 import logging
 logger = logging.getLogger(__name__)
 
@@ -7,9 +7,12 @@ import tqdm
 __all__ = ['get_band_id_from_band_url',
            'get_album_id_from_album_url',
            'get_user_id_from_review_url',
+           'get_artist_id_from_artist_url',
+           'get_label_id_from_label_url',
            'read_csv_to_list_of_dicts',
            'flatten',
            'tqdmForLogging',
+           'timemethod',
            ]
 
 def get_band_id_from_band_url(band_url):
@@ -20,11 +23,10 @@ def get_band_id_from_band_url(band_url):
     else:
         return int(band_id)
 
-def get_album_id_from_album_url(album_url):
-    return get_band_id_from_band_url(album_url)
-
-def get_user_id_from_review_url(review_url):
-    return get_band_id_from_band_url(review_url)
+get_album_id_from_album_url = get_band_id_from_band_url
+get_user_id_from_review_url = get_band_id_from_band_url
+get_artist_id_from_artist_url = get_band_id_from_band_url
+get_label_id_from_label_url = get_band_id_from_band_url
 
 def read_csv_to_list_of_dicts(csv_filename):
     with open(csv_filename, 'r') as f:
@@ -47,4 +49,13 @@ class tqdmForLogging(tqdm.tqdm):
     def write(cls, s, file=None, end="", nolock=False):
         super().write(s, file, end, nolock)
         
-        
+def timemethod(func):
+    # https://realpython.com/primer-on-python-decorators/#timing-functions
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        _t = time.perf_counter()
+        value = func(*args, **kwargs)
+        _t = time.perf_counter() - _t
+        logger.debug(f"{func.__name__!r} took {_t} seconds")
+        return value
+    return wrapper
