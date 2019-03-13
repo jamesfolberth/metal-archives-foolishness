@@ -19,7 +19,7 @@ create table Bands (
 
 drop table if exists Albums;
 create table Albums (
-    album_id integer primary key not null,
+    album_id integer not null,
     band_id integer not null, /* id into Bands table */
 
     added_date text, /* date added to MA */
@@ -30,6 +30,8 @@ create table Albums (
     album_url text not null,
     type text,
     release_date text,
+
+    primary key (band_id, album_id),
     foreign key(band_id) references Bands(band_id)
 );
 

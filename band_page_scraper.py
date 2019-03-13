@@ -53,6 +53,9 @@ class BandPageScraper(BaseScraper):
                      get pages that haven't been gotten before, and then update pages in order
                      of delta between insert date and last modified date?  Or just insert date?
                      Something.  Maybe make another column in the database?
+                     
+                     Do update if insert_date <= some date.  Gotta do this query for each thing
+                     that gest requested.
         """
         super().__init__()
         
@@ -80,14 +83,13 @@ class BandPageScraper(BaseScraper):
         """
         Call .getBandPage() for each band found in the query
         """
-        with lite.connect(self.database_filename) as self.connection:
+        with lite.connect(self.database_filename, isolation_level='IMMEDIATE') as self.connection:
             # How many do we need to do?
             if self.only_if_not_scraped:
                 n_do_query = 'select count(band_id) from Bands where modified_date is null'
             else:
                 n_do_query = 'select count(band_id) from Bands'
-            cursor = self.connection.cursor()
-            n_queried = cursor.execute(n_do_query).fetchall()[0][0]
+            n_queried = self.connection.execute(n_do_query).fetchall()[0][0]
             
             if self.limit >= 0:
                 logger.debug('Invoking limit of %d pages', self.limit)
@@ -121,15 +123,14 @@ class BandPageScraper(BaseScraper):
                 query += ' offset {}'.format(self.offset)
             
             logger.debug('query = %s', repr(query))
-            for band_id,band_url in tqdm.tqdm(cursor.execute(query), total=n_do):
+            for band_id,band_url in tqdm.tqdm(self.connection.execute(query), total=n_do):
                 if self.order_by_reviews:
-                    nrev_cursor = self.connection.cursor()
-                    num_reviews = nrev_cursor.execute('select count(*) from Reviews where band_id=?', (band_id,)).fetchall()[0][0]
+                    num_reviews = self.connection.execute('select count(*) from Reviews where band_id=?', (band_id,)).fetchall()[0][0]
                     logger.debug('num_reviews = %d', num_reviews)
                 
                 # Request and scrape the band's page
                 if not self.skip_band_page:
-                    band_dict, artist_dict_list, band_label_dict_list, label_dict =\
+                    band_dict, artist_dict_list, band_lineup_dict_list, label_dict =\
                         self.getBandPage(band_id, band_url)
                 else:
                     band_dict = {}
@@ -161,11 +162,13 @@ class BandPageScraper(BaseScraper):
                     self.storeInDatabase(band_id,
                                     band_dict=band_dict,
                                     artist_dicts=artist_dict_list,
-                                    bandlabel_dicts=band_label_dict_list,
+                                    bandlineup_dicts=band_lineup_dict_list,
                                     label_dict=label_dict,
                                     similarity_dicts=similar_band_dict_list,
                                     album_dicts=album_dict_list)
-        
+            
+            self.finalDatabaseStuff()
+            
         self.close()
         
     def getBandPage(self, band_id, band_url):
@@ -236,12 +239,15 @@ class BandPageScraper(BaseScraper):
         
         # Get the current label
         label_tag = dd_list[2].a
-        label = label_tag.text
-        label_url = label_tag.get('href')
-        label_id = get_label_id_from_label_url(label_url)
-        label_dict = {'label_id': label_id,
-                      'label': label,
-                      'label_url': label_url}
+        if label_tag:
+            label = label_tag.text
+            label_url = label_tag.get('href')
+            label_id = get_label_id_from_label_url(label_url)
+            label_dict = {'label_id': label_id,
+                          'label': label,
+                          'label_url': label_url}
+        else: # this label doesn't have a page on metal-archives
+            label_dict = {}
         
         # Get the added/modified dates
         audit_div = soup.find('div', {'id': 'auditTrail'})
@@ -538,7 +544,7 @@ class BandPageScraper(BaseScraper):
                         band_id,
                         band_dict=None,
                         artist_dicts=[],
-                        bandlabel_dicts=[],
+                        bandlineup_dicts=[],
                         label_dict=None,
                         similarity_dicts=[],
                         album_dicts=[],
@@ -546,11 +552,77 @@ class BandPageScraper(BaseScraper):
         """
         Store things in the database.
         """
-        cursor = self.connection.cursor()
+        def make_str(keys):
+            return ','.join(keys)
+         
+        #def make_qmark_eq(keys):
+        #    return ','.join(map(lambda k: f"{k}=?", keys))
         
-        logger.warning("storing in db not implemented")
-        raise NotImplementedError()
+        def make_named(keys):
+            return ','.join(map(lambda k: f":{k}", keys))
 
+        def make_named_eq(keys):
+            return ','.join(map(lambda k: f"{k}=:{k}", keys))
+        
+        def where(ids):
+            return 'where ' + ' and '.join(map(lambda k: f"{k}=:{k}", ids))
+        
+        def do_dicts_stuff(dicts, table, ids):
+            for d in dicts:
+                query = f"select {make_str(ids)} from {table} {where(ids)}"
+                #logger.debug(f'select {table} query: "%s"', query)
+                cur.execute(query, {k:v for k,v in d.items() if k in ids})
+                found_id = cur.fetchall()
+                
+                if found_id:
+                    query = f"update {table} set {make_named_eq(d.keys())} {where(ids)}"
+                else:
+                    query = f"insert into {table} ({make_str(d.keys())},insert_date) values ({make_named(d.keys())},datetime('now'))"
+                #logger.debug(f'insert/update {table} query: "%s"', query)
+                cur.execute(query, d)
+       
+        cur = self.connection.cursor()
+        
+        if band_dict:
+            table = 'Bands'
+            ids = ('band_id',)
+            do_dicts_stuff((band_dict,), table, ids)
+        
+        if artist_dicts:
+            table = 'Artists'
+            ids = ('artist_id',)
+            do_dicts_stuff(artist_dicts, table, ids)
+        
+        if label_dict:
+            table = 'Labels'
+            ids = ('label_id',)
+            do_dicts_stuff((label_dict,), table, ids)
+            
+        if bandlineup_dicts:
+            table = 'BandLineup'
+            ids = ('band_id', 'artist_id')
+            do_dicts_stuff(bandlineup_dicts, table, ids) 
+        
+        if similarity_dicts:
+            table = 'Similarities'
+            ids = ('band_id', 'similar_to_id')
+            do_dicts_stuff(similarity_dicts, table, ids)
+        
+        if album_dicts:
+            table = 'Albums'
+            ids = ('album_id', 'band_id')
+            do_dicts_stuff(album_dicts, table, ids)
+        
+        cur.close()
+        self.connection.commit()
+        
+    def finalDatabaseStuff(self):
+        """
+        Do some final things with the database, like
+         - populate the BandLabel table
+        """
+        logger.warning('final db stuff is not implemented')
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrape the band page for each band in the db,'
                                      ' also making a few other GET requests and scrapes.')

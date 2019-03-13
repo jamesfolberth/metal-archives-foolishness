@@ -62,7 +62,7 @@ In particular, the similarity score (users' votes) seems interesting.
 Scrape the band page (which requires 
 NOTE: this will take many days!
 ```
-python band_page_scraper.py database.db
+python band_page_scraper.py database.db --only-if-not-scraped --skip-full-comment --skip-discography --order-by-reviews
 ```
 
 But we can still probably do some interesting things with just the data we have at this point.
