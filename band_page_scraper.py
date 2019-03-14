@@ -26,6 +26,7 @@ class BandPageScraper(BaseScraper):
                  offset=0,
                  limit=-1,
                  order_by_reviews=False,
+                 order_by_insert_date=False,
                  skip_band_page=False,
                  skip_full_comment=False,
                  skip_recommendations=False,
@@ -41,6 +42,7 @@ class BandPageScraper(BaseScraper):
                               so that we scrape the more popular bands first.  Default is
                               whatever the optimizer chooses (probably by band_id, but 
                               that's not guaranteed).
+            order_by_insert_date - scrape pages in order of increasing insert_date (oldest first)
             skip_band_page - skip requesting the band's page; also enables skip_full_comment
             skip_full_comment - skip requesting the band's full comment/read more text
             skip_recommendations - skip requesting the band's recommended/similar bands
@@ -55,7 +57,14 @@ class BandPageScraper(BaseScraper):
                      Something.  Maybe make another column in the database?
                      
                      Do update if insert_date <= some date.  Gotta do this query for each thing
-                     that gest requested.
+                     that page requested.
+                     
+                     How does --limit work with individual queries?  Maybe make the query be
+                     an OR of a bunch of things and limit that?  band page needs updated OR comment
+                     OR recommendations OR discography?  Then limit would be the same for all,
+                     and if something needs many pages it'll get them all?  Dunno..  perhaps
+                     this should really be a band_page_scraper, full_comment_scraper,
+                     recommendations_scraper, and discography_scraper.
         """
         super().__init__()
         
@@ -67,6 +76,7 @@ class BandPageScraper(BaseScraper):
         self.limit = int(limit)
         self.offset = int(offset)
         self.order_by_reviews = bool(order_by_reviews)
+        self.order_by_insert_date = bool(order_by_insert_date)
         self.skip_band_page = bool(skip_band_page)
         self.skip_full_comment = bool(skip_full_comment) or self.skip_band_page
         self.skip_recommendations = bool(skip_recommendations)
@@ -112,6 +122,8 @@ class BandPageScraper(BaseScraper):
            
             if self.order_by_reviews:
                 query += ' order by (select count(*) from Reviews where Reviews.band_id=Bands.band_id) desc'
+            elif self.order_by_insert_date:
+                query += ' order by insert_date asc'
             
             #TODO JMF 10 Mar 2019: this should use lite's parameter substitution
             if self.limit >= 0:
@@ -135,7 +147,7 @@ class BandPageScraper(BaseScraper):
                 else:
                     band_dict = {}
                     artist_dict_list = []
-                    band_label_dict_list = []
+                    bandlineup_dicts = []
                     label_dict = {}
                     
                 # Request the full band comment/read more text
@@ -347,6 +359,9 @@ class BandPageScraper(BaseScraper):
             return str(classes[0])
         
         members = []
+        if not table: # members table is empty
+            return [], []
+        
         rows = table.tbody.find_all('tr')
         i = 0
         while i < len(rows):
@@ -486,8 +501,9 @@ class BandPageScraper(BaseScraper):
             if len(cells) < 4:
                 # end of table, verify, then break
                 tag = cells[0]
-                if tag.get('id') == 'show_more':
+                if tag.get('id') == 'show_more' or tag.get('id') == 'no_artists':
                     break
+                raise NotImplementedError("Incomplete handling of shorter cells")
             
             artist_tag = cells[0]
             similar_to_id = get_band_id_from_band_url(artist_tag.a.get('href'))
@@ -632,7 +648,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--only-if-not-scraped', action='store_true',
                         help="Only scrape pages that haven't previously been scraped "
-                        "(as witnessed by `modified_date` being NULL)")
+                        "(as witnessed by `modified_date` being NULL, comment being null, etc.)")
     parser.add_argument('--limit', type=int, default=-1,
                         help='After scraping --limit pages, exit; useful for dev/test')
     parser.add_argument('--offset', type=int, default=0,
@@ -640,6 +656,9 @@ if __name__ == '__main__':
     parser.add_argument('--order-by-reviews', action='store_true',
                         help='Scrape pages in order of decreasing number of reviews '
                         '(more popular bands first)')
+    parser.add_argument('--order-by-insert-date', action='store_true',
+                        help='Scrape pages in order of increasing insert date '
+                        '(older entries first)')
     
     parser.add_argument('--skip-band-page', action='store_true',
                         help="Skip requesting the band's page; also enables --skip-full-comment")
@@ -666,6 +685,7 @@ if __name__ == '__main__':
                               limit=args.limit,
                               offset=args.offset,
                               order_by_reviews=args.order_by_reviews,
+                              order_by_insert_date=args.order_by_insert_date,
                               skip_band_page=args.skip_band_page,
                               skip_full_comment=args.skip_full_comment,
                               skip_recommendations=args.skip_recommendations,
