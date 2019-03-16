@@ -35,11 +35,11 @@ class BaseScraper(object):
             date = datetime.datetime.utcnow()
             sleep_time = self.crawl_delay - (date - self._last_request_time).total_seconds()
             sleep_time = max(0, sleep_time)
-            #print('Sleeping for {} seconds'.format(sleep_time))
+            #logger.debug('Sleeping for {} seconds'.format(sleep_time))
             time.sleep(sleep_time)
         
-        response = self.session.get(*args, **kwargs)
         self._last_request_time = datetime.datetime.utcnow()
+        response = self.session.get(*args, **kwargs)
         
         return response
     
