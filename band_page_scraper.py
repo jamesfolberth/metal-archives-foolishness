@@ -147,7 +147,7 @@ class BandPageScraper(BaseScraper):
                 else:
                     band_dict = {}
                     artist_dict_list = []
-                    bandlineup_dicts = []
+                    band_lineup_dict_list = []
                     label_dict = {}
                     
                 # Request the full band comment/read more text
