@@ -25,6 +25,7 @@ class BandPageScraper(BaseScraper):
                  only_if_not_scraped=False,
                  offset=0,
                  limit=-1,
+                 reviews_gt=0,
                  order_by_reviews=False,
                  order_by_insert_date=False,
                  skip_band_page=False,
@@ -38,6 +39,8 @@ class BandPageScraper(BaseScraper):
             only_if_not_scraped - only scrape pages that haven't been previously scraped
             limit - only scrape this many pages, then exit
             offset - start `offset` rows into the band query
+            reviews_gt - scrape the band page only if the band has strictly greater than
+                         reviews_gt reviews
             order_by_reviews - scrape pages in order of decreasing number of reviews,
                               so that we scrape the more popular bands first.  Default is
                               whatever the optimizer chooses (probably by band_id, but 
@@ -75,6 +78,7 @@ class BandPageScraper(BaseScraper):
         self.only_if_not_scraped = bool(only_if_not_scraped)
         self.limit = int(limit)
         self.offset = int(offset)
+        self.reviews_gt = int(reviews_gt)
         self.order_by_reviews = bool(order_by_reviews)
         self.order_by_insert_date = bool(order_by_insert_date)
         self.skip_band_page = bool(skip_band_page)
@@ -97,8 +101,12 @@ class BandPageScraper(BaseScraper):
             # How many do we need to do?
             if self.only_if_not_scraped:
                 n_do_query = 'select count(band_id) from Bands where modified_date is null'
+                if self.reviews_gt >= 0:
+                    n_do_query += f' and (select count(*) from Reviews where Reviews.band_id=Bands.band_id) > {self.reviews_gt}'
             else:
                 n_do_query = 'select count(band_id) from Bands'
+                if self.reviews_gt >= 0:
+                    n_do_query += f' where (select count(*) from Reviews where Reviews.band_id=Bands.band_id) > {self.reviews_gt}'
             n_queried = self.connection.execute(n_do_query).fetchall()[0][0]
             
             if self.limit >= 0:
@@ -117,8 +125,12 @@ class BandPageScraper(BaseScraper):
             # Okay, now do the stuff
             if self.only_if_not_scraped:
                 query = 'select band_id,band_url from Bands where modified_date is null'
+                if self.reviews_gt >= 0:
+                    query += f' and (select count(*) from Reviews where Reviews.band_id=Bands.band_id) > {self.reviews_gt}'
             else:
                 query = 'select band_id,band_url from Bands'
+                if self.reviews_gt >= 0:
+                    query += f' where (select count(*) from Reviews where Reviews.band_id=Bands.band_id) > {self.reviews_gt}'
            
             if self.order_by_reviews:
                 query += ' order by (select count(*) from Reviews where Reviews.band_id=Bands.band_id) desc'
@@ -653,6 +665,9 @@ if __name__ == '__main__':
                         help='After scraping --limit pages, exit; useful for dev/test')
     parser.add_argument('--offset', type=int, default=0,
                         help='Start --offset rows into the band query; useful for dev/test')
+    parser.add_argument('--reviews-gt', type=int, default=0,
+                        help='Scrape pages only if that have strictly greater than --reviews-gt reviews')
+
     parser.add_argument('--order-by-reviews', action='store_true',
                         help='Scrape pages in order of decreasing number of reviews '
                         '(more popular bands first)')
@@ -684,6 +699,7 @@ if __name__ == '__main__':
                               only_if_not_scraped=args.only_if_not_scraped,
                               limit=args.limit,
                               offset=args.offset,
+                              reviews_gt=args.reviews_gt,
                               order_by_reviews=args.order_by_reviews,
                               order_by_insert_date=args.order_by_insert_date,
                               skip_band_page=args.skip_band_page,
