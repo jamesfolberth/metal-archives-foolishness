@@ -41,7 +41,29 @@ Scrape the band pages (which will take a while!):
 python band_page_scraper.py database.db --only-if-not-scraped --skip-full-comment --skip-discography --order-by-reviews --reviews-gt 0
 ```
 
+## Graph/Visualization ideas?
+https://github.com/d3/d3/wiki/Gallery
 
+http://www.findtheconversation.com/concept-map/
+http://www.redotheweb.com/CodeFlower/
+
+Adjust the graph based on similarity level, which is pretty neat
+http://www.cotrino.com/2012/11/language-network/
+
+http://emptypipes.org/2015/02/15/selectable-force-directed-graph/
+http://emptypipes.org/2017/04/29/d3v4-selectable-zoomable-force-directed-graph/
+
+http://bl.ocks.org/paulovn/9686202
+
+http://sigmajs.org/
+
+Looks like the python offerings are networkx, igraph, graphtool, and graphviz (pydot)
+https://ipython-books.github.io/64-visualizing-a-networkx-graph-in-the-notebook-with-d3js/
+
+I tried just throwing the whole review graph with outdegree > 1.  lol, it was dog slow.
+So gotta do something smarter, I guess.
+Maybe like pick a band and then show all connections <= k hops away.  This is maybe called the ego subgraph.
+https://bl.ocks.org/heybignick/3faf257bbbbc7743bb72310d03b86ee8
 
 ---
 
