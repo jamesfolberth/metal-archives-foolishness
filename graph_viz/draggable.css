@@ -1,28 +1,78 @@
-#d3_draggable_graph svg {
+
+html {
+    width: 100%;
+}
+
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  font-family: sans-serif;
+  font-size: 75%;
+}
+
+.controls {
+  flex-basis: 200px;
+  padding: 0 5px;
+}
+.controls .force {
+  background-color:#eee;
+  border-radius: 3px;
+  padding: 5px;
+  margin: 5px 0;
+}
+.controls .force p label { margin-right: .5em; font-size: 120%; font-weight: bold;}
+.controls .force p { margin-top: 0;}
+.controls .force label { display: inline-block; }
+/*.controls input[type="checkbox"] { transform: scale(1.2, 1.2); }*/
+.controls input[type="range"] { margin: 0 5% 0.5em 5%; width: 90%; }
+/* alpha viewer */
+/*
+.controls .alpha p { margin-bottom: .25em; }
+.controls .alpha .alpha_bar { height: .5em; border: 1px #777 solid; border-radius: 2px; padding: 1px; display: flex; }
+.controls .alpha .alpha_bar #alpha_value { background-color: #555; border-radius: 1px; flex-basis: 100% }
+.controls .alpha .alpha_bar:hover { border-width: 2px; margin:-1px; }
+.controls .alpha .alpha_bar:active #alpha_value { background-color: #222 }
+*/
+
+#d3graph svg {
+    /*
+    flex-basis: 100%;
+    min-width: 200px;
+    */
+    width: 1200px;
+    height: 550px;
     border: 1px solid;
     font: 13px sans-serif;
     text-anchor: end;
 }
 
-#d3_draggable_graph .node {
-  stroke: #fff;
-  stroke-width: 1.5px;
+#d3graph .node {
+    pointer-events: all;
+    stroke: #fff;
+    stroke-width: 1.5px;
 }
 
 .node .selected {
-  stroke: black;
-  fill: #999;
+    stroke: black;
+    fill: #999;
 }
 
 .node .fixed {
-  fill: #f00;
+    //fill: #f00;
+    fill: #800;
 }
 
 .link {
-  stroke: #999;
+    stroke: #999;
 }
 
 .link .selected {
-  stroke: black;
-  stroke-width: 2.5px;
+    stroke: black;
+    stroke-width: 2.5px;
+}
+
+.link .hidden {
+    opacity: 0;
 }

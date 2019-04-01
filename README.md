@@ -78,6 +78,12 @@ Dunno how much that would cost.
 
 https://rstudio-pubs-static.s3.amazonaws.com/161862_8338539b06d849d291b6804ca0c7434c.html
 
+
+http://bl.ocks.org/rkirsling/5001347
+
+Interactive controls/parameters for force layout
+https://bl.ocks.org/steveharoz/8c3e2524079a8c440df60c1ab72b5d03
+
 ---
 
 `review_thing.py` is just a one-off experiment

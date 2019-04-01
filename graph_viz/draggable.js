@@ -1,3 +1,9 @@
+
+var graphProperties = {
+    review_quantile: 0,
+}
+
+
 function createV4DraggableGraph(svg, graph) {
     // if both d3v3 and d3v4 are loaded, we'll assume
     // that d3v4 is called d3v4, otherwise we'll assume
@@ -38,7 +44,7 @@ function createV4DraggableGraph(svg, graph) {
         gDraw.attr('transform', d3v4.event.transform);
     }
 
-    var color = d3v4.scaleOrdinal(d3v4.schemeCategory20);
+    //var color = d3v4.scaleOrdinal(d3v4.schemeCategory20);
 
     if (! ("links" in graph)) {
         console.log("Graph is missing links");
@@ -107,9 +113,9 @@ function createV4DraggableGraph(svg, graph) {
                 //.strength(0)
               )
         .force("charge", d3v4.forceManyBody()
-                //.strength(-20)
+                //.strength(-50)
                 //.strength(node => Math.min(-20, Math.max(-30, -20./Math.sqrt(node.radius))))
-                //.distanceMin(50)
+                .distanceMin(20)
                 //.distanceMax(200)
             )
         //.force("collide", d3v4.forceCollide()
@@ -122,8 +128,8 @@ function createV4DraggableGraph(svg, graph) {
                     factor = node.force_radial_factor;
                     factor = Math.sqrt(factor);
                     // rescale from [0,1] to [0.2, 0.5]
-                    min_scale = 0.2
-                    max_scale = 0.5
+                    min_scale = 0.1
+                    max_scale = 0.4
                     factor = min_scale + (max_scale - min_scale)*factor
                     return factor;
                 }))
@@ -312,6 +318,22 @@ function createV4DraggableGraph(svg, graph) {
         d3v4.select(this).classed("fixed", node.fixed = false);
     }
 
+    function updateLinks() {
+        const min_review_score = this.graph.min_review_score;
+        const max_review_score = this.graph.max_review_score;
+
+        this.link
+            .each(function(link) {
+            hidden = false;
+            threshold = min_review_score + (max_review_score - min_review_score)*graphProperties.review_quantile;
+            if (link.review_score < threshold) {
+                hidden = true;
+            }
+            link.hidden = hidden;
+        })
+        .classed("hidden", link => link.hidden)
+    }
+
     var texts = ['Use the scroll wheel to zoom',
                  ]
 
@@ -323,5 +345,9 @@ function createV4DraggableGraph(svg, graph) {
         .attr('y', function(d,i) { return 470 + i * 18; })
         .text(function(d) { return d; });
 
-    return graph;
+    return {graph: graph,
+            link: link,
+            node: node,
+            updateLinks: updateLinks,
+            }
 };

@@ -115,10 +115,10 @@ class EgoGraphs(object):
                 # Also store the path from band_name to this node
                 ego.nodes[target]['path'] = path
 
-            scores = [t[1]['score'] for t in ego.nodes(data=True) if 'score' in t[1]]
-            plt.figure()
-            plt.hist(scores, bins=25)
-            plt.show()
+            #scores = [t[1]['score'] for t in ego.nodes(data=True) if 'score' in t[1]]
+            #plt.figure()
+            #plt.hist(scores, bins=25)
+            #plt.show()
 
             # Take only the upper qth quantile of the scores, to trim the graph a bit
             # Or better yet, specify a max size?
@@ -134,6 +134,12 @@ class EgoGraphs(object):
 
                 score = t[1]['score']
                 if score < limit:
+                    ego.remove_node(t[0])
+
+            # And if any nodes are isolated, drop them
+            nodes = list(ego.nodes(data=True))
+            for t in nodes:
+                if ego.in_degree(t[0]) == 0:
                     ego.remove_node(t[0])
 
             print(len(ego))
@@ -193,14 +199,30 @@ class EgoGraphs(object):
                   'path': t[1].get('path', []),
                   }
                   for t in ego.nodes(data=True)]
+
         links = [{'source': t[0],
                   'target': t[1],
                   'stroke_width': t[2]['stroke_width'],
+                  'review_score': t[2]['weight'],
                   }
                   for t in ego.edges(data=True)]
 
+        min_radius = min(t[1]['radius'] for t in ego.nodes(data=True))
+        max_radius = max(t[1]['radius'] for t in ego.nodes(data=True))
+
+        min_review_score = min(v['review_score'] for v in links)
+        max_review_score = max(v['review_score'] for v in links)
+
+        data = {'nodes': nodes,
+                'links': links,
+                'min_radius': min_radius,
+                'max_radius': max_radius,
+                'min_review_score': min_review_score,
+                'max_review_score': max_review_score,
+                }
+
         with open(json_file, 'w') as f:
-            json.dump({'nodes': nodes, 'links': links}, f)
+            json.dump(data, f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

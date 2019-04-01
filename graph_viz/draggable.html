@@ -2,9 +2,29 @@
 <head>
     <meta charset="utf-8" />
 </head>
-<div align='center' id="d3_draggable_graph" style="width: 1200px; height: 650px; margin: auto; margin-bottom: 12px">
-    <svg />
-</div>
+<body>
+
+    <div class="controls">
+        <div class="force">
+            <p>
+                <label>link quantile</label>
+                Shows links only if their review score is above this quantile.</p>
+            <label>
+                quantile
+                <output id="review_score_quantile_slider_output">0</output>
+                <input type="range" min="0" max="1" value="0" step="0.01"
+                    oninput="d3.select('#review_score_quantile_slider_output').text(value);
+                             graphProperties.review_quantile=value;
+                             graph.updateLinks();">
+            </label>
+        </div>
+    </div>
+
+    <!--<div align='center' id="d3_draggable_graph" style="width: 1200px; height: 650px; margin: auto; margin-bottom: 12px">-->
+    <div id="d3graph">
+        <svg><svg/>
+    </div>
+</body>
 
 <link rel='stylesheet' href='draggable.css'>
 <script src="d3.v4.min.js"></script>
@@ -12,14 +32,17 @@
 <script src="draggable.js"></script>
 
 <script>
-    var svg = d3.select('#d3_draggable_graph');
+    var svg = d3.select('#d3graph');
 
-    d3.json('ego.json', function(error, graph) {
+    var graph;
+    d3.json('ego.json', function(error, _graph) {
         if (!error) {
-            //console.log('graph', graph);
-            createV4DraggableGraph(svg, graph);
+            //console.log('graph', _graph);
+            graph = createV4DraggableGraph(svg, _graph);
+            graph.updateLinks();
         } else {
             console.error(error);
         }
     });
 </script>
+</html>
