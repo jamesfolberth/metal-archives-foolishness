@@ -65,6 +65,19 @@ So gotta do something smarter, I guess.
 Maybe like pick a band and then show all connections <= k hops away.  This is maybe called the ego subgraph.
 https://bl.ocks.org/heybignick/3faf257bbbbc7743bb72310d03b86ee8
 
+https://bl.ocks.org/pkerpedjiev/f2e6ebb2532dae603de13f0606563f5b
+Sticky layout: https://bl.ocks.org/mbostock/3750558
+
+Running a simple HTTP server
+```
+python -m http.server
+```
+
+Do do interactive ego graphs, I could have an AWS lambda that computes the ego and spits out the json.
+Dunno how much that would cost.
+
+https://rstudio-pubs-static.s3.amazonaws.com/161862_8338539b06d849d291b6804ca0c7434c.html
+
 ---
 
 `review_thing.py` is just a one-off experiment

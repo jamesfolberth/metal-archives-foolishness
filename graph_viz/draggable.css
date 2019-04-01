@@ -1,0 +1,28 @@
+#d3_draggable_graph svg {
+    border: 1px solid;
+    font: 13px sans-serif;
+    text-anchor: end;
+}
+
+#d3_draggable_graph .node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.node .selected {
+  stroke: black;
+  fill: #999;
+}
+
+.node .fixed {
+  fill: #f00;
+}
+
+.link {
+  stroke: #999;
+}
+
+.link .selected {
+  stroke: black;
+  stroke-width: 2.5px;
+}
