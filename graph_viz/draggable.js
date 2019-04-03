@@ -1,9 +1,3 @@
-
-var graphProperties = {
-    review_quantile: 0,
-}
-
-
 function createV4DraggableGraph(svg, graph) {
     // if both d3v3 and d3v4 are loaded, we'll assume
     // that d3v4 is called d3v4, otherwise we'll assume
@@ -51,17 +45,16 @@ function createV4DraggableGraph(svg, graph) {
         return;
     }
 
+    var params = {
+        link_quantile_method: 'radius_threshold',
+        link_quantile: 0.,
+    };
+
     var nodes = {};
     var i;
     for (i = 0; i < graph.nodes.length; i++) {
         nodes[graph.nodes[i].name] = graph.nodes[i];
-        //graph.nodes[i].weight = 1.01;
     }
-
-    // the brush needs to go before the nodes so that it doesn't
-    // get called when the mouse is over a node
-    //var gBrushHolder = gDraw.append('g');
-    //var gBrush = null;
 
     var link = gDraw.append("g")
         .attr("class", "link")
@@ -88,7 +81,17 @@ function createV4DraggableGraph(svg, graph) {
         .on("drag", dragged)
         .on("end", dragended));
 
+    // initialize properties we'll use for interaction with the nodes & links
+    node.each(function(node) {
+        node.selected = false;
+        node.hidden = false;
+        node.fixed = false;
+        })
 
+    link.each(function(link) {
+        link.hidden = false;
+        link.user_hidden = false;
+        })
 
     // add titles for mouseover blurbs
     //node.append("title")
@@ -106,11 +109,18 @@ function createV4DraggableGraph(svg, graph) {
     node.append("title")
         .text(d => d.name);
 
+    link.append("title")
+        .text(function(link) {
+            s = link.source + ' similar to ';
+            s += link.target + ' with ' + link.sim_score + ' votes';
+            return s;
+        })
+
     var simulation = d3v4.forceSimulation()
         .force("link", d3v4.forceLink()
                 .id(function(d) { return d.name; })
                 //.distance(50)
-                //.strength(0)
+                .strength(0.01)
               )
         .force("charge", d3v4.forceManyBody()
                 //.strength(-50)
@@ -120,16 +130,15 @@ function createV4DraggableGraph(svg, graph) {
             )
         //.force("collide", d3v4.forceCollide()
         //        .radius(20))
-        .force("center", d3v4.forceCenter(parentWidth / 2, parentHeight / 2))
-        //.force("x", d3v4.forceX(parentWidth/2))
-        //.force("y", d3v4.forceY(parentHeight/2))
+        .force("center", d3v4.forceCenter(0.5*parentWidth, 0.7*parentHeight))
+        .force("x", d3v4.forceX(0.5*parentWidth).strength(0.05))
         .force("y", d3v4.forceY(parentHeight)
                 .strength(function(node) {
                     factor = node.force_radial_factor;
                     factor = Math.sqrt(factor);
-                    // rescale from [0,1] to [0.2, 0.5]
-                    min_scale = 0.1
-                    max_scale = 0.4
+                    // rescale from [0,1] to [0.2, 0.5] or something
+                    min_scale = 0.2
+                    max_scale = 0.7
                     factor = min_scale + (max_scale - min_scale)*factor
                     return factor;
                 }))
@@ -159,124 +168,42 @@ function createV4DraggableGraph(svg, graph) {
             .attr("cy", function(d) { return d.y; });
     }
 
-    //var brushMode = false;
-    //var brushing = false;
-
-    //var brush = d3v4.brush()
-    //    .on("start", brushstarted)
-    //    .on("brush", brushed)
-    //    .on("end", brushended);
-
-    //function brushstarted() {
-    //    // keep track of whether we're actively brushing so that we
-    //    // don't remove the brush on keyup in the middle of a selection
-    //    brushing = true;
-//
-    //    node.each(function(d) {
-    //        d.previouslySelected = shiftKey && d.selected;
-    //    });
-    //}
-
     rect.on('click', () => {
-        //node.each(function(d) {
-        //    d.selected = false;
-        //    //d.previouslySelected = false;
-        //});
-        node.classed("selected", false);
-        //link.each(function(link) { link.selected = false; });
-        link.classed("selected", false);
+        node.each(node => node.selected = false)
+            .classed("selected", false);
+        link.each(link => link.selected = false)
+            .classed("selected", false);
     });
-
-    //function brushed() {
-    //    if (!d3v4.event.sourceEvent) return;
-    //    if (!d3v4.event.selection) return;
-//
-    //    var extent = d3v4.event.selection;
-//
-    //    node.classed("selected", function(d) {
-    //        return d.selected = d.previouslySelected ^
-    //        (extent[0][0] <= d.x && d.x < extent[1][0]
-    //         && extent[0][1] <= d.y && d.y < extent[1][1]);
-    //    });
-    //}
-
-    //function brushended() {
-    //    if (!d3v4.event.sourceEvent) return;
-    //    if (!d3v4.event.selection) return;
-    //    if (!gBrush) return;
-//
-    //    gBrush.call(brush.move, null);
-//
-    //    if (!brushMode) {
-    //        // the shift key has been release before we ended our brushing
-    //        gBrush.remove();
-    //        gBrush = null;
-    //    }
-//
-    //    brushing = false;
-    //}
-
-    //d3v4.select('body').on('keydown', keydown);
-    //d3v4.select('body').on('keyup', keyup);
-//
-    //var shiftKey;
-//
-    //function keydown() {
-    //    shiftKey = d3v4.event.shiftKey;
-//
-    //    if (shiftKey) {
-    //        // if we already have a brush, don't do anything
-    //        if (gBrush)
-    //            return;
-//
-    //        brushMode = true;
-//
-    //        if (!gBrush) {
-    //            gBrush = gBrushHolder.append('g');
-    //            gBrush.call(brush);
-    //        }
-    //    }
-    //}
-//
-    //function keyup() {
-    //    shiftKey = false;
-    //    brushMode = false;
-//
-    //    if (!gBrush)
-    //        return;
-//
-    //    if (!brushing) {
-    //        // only remove the brush if we're not actively brushing
-    //        // otherwise it'll be removed when the brushing ends
-    //        gBrush.remove();
-    //        gBrush = null;
-    //    }
-    //}
 
     function dragstarted(d) {
         if (!d3v4.event.active) simulation.alphaTarget(0.9).restart();
 
         if (!d.selected) {
             // if this node isn't selected, then we have to unselect every other node
-            node.classed("selected", function(p) {
-                p.selected = false;
+            node.classed("selected", function(node) {
+                node.selected = false;
                 return false;
             });
         }
 
         // Set links that source from this node to selected
-        link.filter((link) => link.source.name == d.name)
-            .each((link) => link.selected = true )
+        link.filter((link) => link.source.name == d.name || link.target.name == d.name)
+            .each(function(link) {
+                link.selected = true;
+                link.hidden = false;
+                link.user_hidden = false;
+            })
 
         // Set the selected class for this node and links
         d3v4.select(this).classed("selected", (d) => d.selected = true);
 
         // Unselect the other links
-        link.filter((link) => link.source.name != d.name)
+        link.filter((link) => link.source.name != d.name && link.target.name != d.name)
             .classed("selected", false)
 
-        link.filter((d) => d.selected)
-            .classed("selected", (d) => d.selected)
+        link.filter((link) => link.selected)
+            .classed("selected", true)
+            .classed("hidden", link => link.hidden || link.user_hidden) // Unhide links that are selected
             .raise();
 
         node.filter(d => d.selected)
@@ -292,25 +219,25 @@ function createV4DraggableGraph(svg, graph) {
     function dragged(d) {
       //d.fx = d3v4.event.x;
       //d.fy = d3v4.event.y;
-            node.filter(function(d) { return d.selected; })
-            .each(function(d) {
-                d.fx += d3v4.event.dx;
-                d.fy += d3v4.event.dy;
-            })
-    }
+      node.filter(function(d) { return d.selected; })
+      .each(function(d) {
+          d.fx += d3v4.event.dx;
+          d.fy += d3v4.event.dy;
+      })
+  }
 
-    function dragended(d) {
+  function dragended(d) {
       if (!d3v4.event.active) simulation.alphaTarget(0);
       //d.fx = null;
       //d.fy = null;
-        node.filter(function(d) { return d.selected; })
-        .each(function(d) { //d.fixed &= ~6;
-            //d.fx = null;
-            //d.fy = null;
-        })
-        link.filter(function(link) { return link.source.name == d.name; })
-            .each(function(link) { return link.selected = false; })
-    }
+      node.filter(function(d) { return d.selected; })
+      .each(function(d) { //d.fixed &= ~6;
+          //d.fx = null;
+          //d.fy = null;
+      })
+      link.filter(function(link) { return link.source.name == d.name || link.target.name == d.name; })
+      .each(function(link) { return link.selected = false; })
+  }
 
     function node_double_clicked(node) {
         node.fx = null;
@@ -319,19 +246,67 @@ function createV4DraggableGraph(svg, graph) {
     }
 
     function updateLinks() {
-        const min_review_score = this.graph.min_review_score;
-        const max_review_score = this.graph.max_review_score;
+        const link_quantile = this.params.link_quantile;
+        const link_quantile_method = this.params.link_quantile_method;
+
+        if (link_quantile_method == 'score_threshold') {
+            const min_sim_score = this.graph.min_sim_score;
+            const max_sim_score = this.graph.max_sim_score;
+
+            var threshold_test = function(link) {
+                threshold = min_sim_score + (max_sim_score - min_sim_score)*link_quantile;
+                return link.sim_score < threshold;
+            };
+
+        } else if (link_quantile_method == 'radius_threshold') {
+            const min_radius = this.graph.min_radius;
+            const max_radius = this.graph.max_radius;
+
+            var threshold_test = function(link) {
+                source = link.source
+                target = link.target
+                //radius = Math.max(source.radius, target.radius)
+                //radius = Math.min(source.radius, target.radius)
+                radius = 0.5*(source.radius + target.radius)
+                threshold = min_radius + (max_radius - min_radius)*link_quantile;
+                return radius < threshold;
+            };
+
+        } else {
+            throw Error('bad updateLinks method')
+        }
 
         this.link
             .each(function(link) {
-            hidden = false;
-            threshold = min_review_score + (max_review_score - min_review_score)*graphProperties.review_quantile;
-            if (link.review_score < threshold) {
-                hidden = true;
-            }
-            link.hidden = hidden;
-        })
-        .classed("hidden", link => link.hidden)
+                hidden = false;
+                if (!link.source.selected && threshold_test(link)) {
+                    hidden = true;
+                }
+                link.hidden = hidden;
+            })
+            .classed("hidden", link => link.hidden || link.user_hidden)
+    }
+
+    // hide a node's links on right click
+    svg.on("contextmenu", function() {
+        d3v4.event.preventDefault();
+    })
+
+    node.on("contextmenu", function(node) {
+        d3v4.event.preventDefault();
+        link.filter(link => link.source.name == node.name || link.target.name == node.name)
+            .each(function (link) {
+                link.selected = false;
+                link.user_hidden = true;
+            })
+            .classed("selected", false)
+            .classed("hidden", true)
+    })
+
+    // un-hide nodes hidden by link.user_hidden
+    function unhide_nodes() {
+        link.each(link => link.user_hidden = false)
+            .classed("hidden", link => link.hidden)
     }
 
     var texts = ['Use the scroll wheel to zoom',
@@ -349,5 +324,6 @@ function createV4DraggableGraph(svg, graph) {
             link: link,
             node: node,
             updateLinks: updateLinks,
+            params: params,
             }
 };

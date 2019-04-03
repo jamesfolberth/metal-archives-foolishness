@@ -41,7 +41,7 @@ class EgoGraphs(object):
         self.edge_list = [(band_id,similar_to_id,score) for band_id,similar_to_id,score in self.sim_list]
 
     def makeGraph(self):
-        G = nx.DiGraph()
+        G = nx.Graph()
         G.add_weighted_edges_from(self.edge_list)
         self.G = nx.relabel_nodes(G, self.band_id_to_band)
 
@@ -62,9 +62,9 @@ class EgoGraphs(object):
         max_radius = 10
 
         if method == 'linear_indeg':
-            # radius is proportional to in degree.  This will show popular bands
+            # radius is proportional to degree.  This will show popular bands
             nodes = ego.nodes()
-            indegs = ego.in_degree(nodes, weight='weight')
+            indegs = ego.degree(nodes, weight='weight')
             min_indeg = min(t[1] for t in indegs)
             max_indeg = max(t[1] for t in indegs)
 
@@ -106,7 +106,7 @@ class EgoGraphs(object):
                 #weights = [ego.edges[(path[i-1],path[i])]['weight'] for i in range(1,len(path))]
                 alpha = 0.1; # penalty for being farther from the source
                 #weights = [ego.edges[(path[i-1],path[i])]['weight']*alpha**(i-1) for i in range(1,len(path))]
-                weights = [ego.edges[(path[i-1],path[i])]['weight']/ego.in_degree(path[i-1])*alpha**(i-1) for i in range(1,len(path))]
+                weights = [ego.edges[(path[i-1],path[i])]['weight']/ego.degree(path[i-1])*alpha**(i-1) for i in range(1,len(path))]
                 score = np.exp(np.sum(np.log(weights))/len(weights))
                 #score /= len(weights)
 
@@ -139,7 +139,7 @@ class EgoGraphs(object):
             # And if any nodes are isolated, drop them
             nodes = list(ego.nodes(data=True))
             for t in nodes:
-                if ego.in_degree(t[0]) == 0:
+                if ego.degree(t[0]) == 0:
                     ego.remove_node(t[0])
 
             print(len(ego))
@@ -203,22 +203,22 @@ class EgoGraphs(object):
         links = [{'source': t[0],
                   'target': t[1],
                   'stroke_width': t[2]['stroke_width'],
-                  'review_score': t[2]['weight'],
+                  'sim_score': t[2]['weight'],
                   }
                   for t in ego.edges(data=True)]
 
         min_radius = min(t[1]['radius'] for t in ego.nodes(data=True))
         max_radius = max(t[1]['radius'] for t in ego.nodes(data=True))
 
-        min_review_score = min(v['review_score'] for v in links)
-        max_review_score = max(v['review_score'] for v in links)
+        min_sim_score = min(v['sim_score'] for v in links)
+        max_sim_score = max(v['sim_score'] for v in links)
 
         data = {'nodes': nodes,
                 'links': links,
                 'min_radius': min_radius,
                 'max_radius': max_radius,
-                'min_review_score': min_review_score,
-                'max_review_score': max_review_score,
+                'min_sim_score': min_sim_score,
+                'max_sim_score': max_sim_score,
                 }
 
         with open(json_file, 'w') as f:
