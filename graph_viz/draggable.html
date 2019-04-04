@@ -6,8 +6,18 @@
 
     <div class="controls">
         <div class="force">
+            <button type="button" onclick="graph.hideLinks()">Hide links</button>
+            <p>Hide all links.</p>
+        </div>
+
+        <div class="force">
+            <button type="button" onclick="graph.unhideLinks()">Un-hide links</button>
+            <p>Un-hide manually hidden links.</p>
+        </div>
+
+        <div class="force">
             <p>
-                <label>link quantile</label>
+                <label>Link quantile</label>
                 Shows links only if their similarity score is above this quantile.</p>
             <label>
                 quantile
@@ -18,6 +28,12 @@
                              graph.updateLinks();">
             </label>
         </div>
+
+        <div class="force">
+            <button type="button" onclick="graph.freeFixedNodes()">Free fixed nodes</button>
+            <p>Allow any fixed nodes to move again.</p>
+        </div>
+
     </div>
 
     <!--<div align='center' id="d3_draggable_graph" style="width: 1200px; height: 650px; margin: auto; margin-bottom: 12px">-->

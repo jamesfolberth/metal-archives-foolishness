@@ -182,10 +182,13 @@ class EgoGraphs(object):
 
                 width = weight
                 width = float(width - min_weight) / float(max(1, max_weight - min_weight))
+                width = width ** 0.33
+                #width = np.log10(width+1)
 
-                min_width = 1
-                max_width = 5
+                min_width = 1.5
+                max_width = 4
                 width = min_width + (max_width - min_width) * width
+                #print(width)
 
                 ego.edges[(source,target)]['stroke_width'] = width
 

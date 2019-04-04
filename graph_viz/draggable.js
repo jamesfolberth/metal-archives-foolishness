@@ -287,7 +287,7 @@ function createV4DraggableGraph(svg, graph) {
             .classed("hidden", link => link.hidden || link.user_hidden)
     }
 
-    // hide a node's links on right click
+    // hide/un-hide a node's links on right click
     svg.on("contextmenu", function() {
         d3v4.event.preventDefault();
     })
@@ -296,17 +296,29 @@ function createV4DraggableGraph(svg, graph) {
         d3v4.event.preventDefault();
         link.filter(link => link.source.name == node.name || link.target.name == node.name)
             .each(function (link) {
-                link.selected = false;
-                link.user_hidden = true;
+                //link.selected = false;
+                link.user_hidden = !link.user_hidden;
             })
-            .classed("selected", false)
-            .classed("hidden", true)
+            //.classed("selected", link => link.selected)
+            .classed("hidden", link => link.user_hidden)
     })
 
     // un-hide nodes hidden by link.user_hidden
-    function unhide_nodes() {
+    function unhide_links() {
         link.each(link => link.user_hidden = false)
-            .classed("hidden", link => link.hidden)
+            .classed("hidden", link => link.hidden || link.user_hidden)
+    }
+
+    function hide_links() {
+        link.each(link => link.user_hidden = true)
+            .filter(link => !link.selected)
+            .classed("hidden", link => link.hidden || link.user_hidden)
+    }
+
+    // free any fixed nodes
+    function free_fixed_nodes() {
+        node.each(node => node.fixed = false)
+            .classed("fixed", false)
     }
 
     var texts = ['Use the scroll wheel to zoom',
@@ -324,6 +336,9 @@ function createV4DraggableGraph(svg, graph) {
             link: link,
             node: node,
             updateLinks: updateLinks,
+            unhideLinks: unhide_links,
+            hideLinks: hide_links,
+            freeFixedNodes: free_fixed_nodes,
             params: params,
             }
 };
