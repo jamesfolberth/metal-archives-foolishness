@@ -84,6 +84,27 @@ http://bl.ocks.org/rkirsling/5001347
 Interactive controls/parameters for force layout
 https://bl.ocks.org/steveharoz/8c3e2524079a8c440df60c1ab72b5d03
 
+
+Move some of the calculations to JS?
+Make a faster version of the ego graph code for use in AWS lambda.
+Can I still pull from sqlite over a network?
+
 ---
+
+##
+Trim up the database for just ego graph stuff
+```
+< schema.sql sqlite3 similarity_database.db
+sqlite3 database.db
+sqlite> attach DATABASE 'similarity_database.db' as sim;
+sqlite> insert into sim.Bands select * from main.Bands ;
+sqlite> insert into sim.Similarities select * from main.Similarities ;
+sqlite> vaccum ;
+sqlite> .quit
+du -hsc similarity_database.db
+29M	similarity_database.db
+
+sqlite3 similarity_database.db
+```
 
 `review_thing.py` is just a one-off experiment

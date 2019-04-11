@@ -1,4 +1,4 @@
-import json, argparse
+import json, argparse, pickle
 import sqlite3 as lite
 
 import numpy as np
@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 class EgoGraphs(object):
     def __init__(self, database="../database.db"):
         self.database = str(database)
-        self.readDatabase()
-        self.makeGraph()
+        #self.readDatabase()
+        #self.makeGraph()
+        #self.pickle()
+        self.unpickle()
 
     def readDatabase(self):
         with lite.connect(f'file:{database}?mode=ro', uri=True) as con:
@@ -44,6 +46,16 @@ class EgoGraphs(object):
         G = nx.Graph()
         G.add_weighted_edges_from(self.edge_list)
         self.G = nx.relabel_nodes(G, self.band_id_to_band)
+
+    def pickle(self):
+        fn = 'ego_stuff.pkl'
+        with open(fn, 'wb') as f:
+            pickle.dump(self.G, f)
+
+    def unpickle(self):
+        fn = 'ego_stuff.pkl'
+        with open(fn, 'rb') as f:
+            self.G = pickle.load(f)
 
     def makeEgoGraph(self, band_name, ego_radius=2):
         # https://stackoverflow.com/questions/17301887/how-to-compute-nearby-nodes-with-networkx
