@@ -65,6 +65,10 @@ body {
     fill: #800;
 }
 
+.node .hidden {
+    opacity: 0;
+}
+
 .link {
     stroke: #999;
 }
@@ -75,5 +79,16 @@ body {
 }
 
 .link .hidden {
+    opacity: 0;
+}
+
+.node_text {
+    font: 8px sans-serif;
+    pointer-events: none;
+    text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+    text-anchor: start;
+}
+
+.node_text .hidden {
     opacity: 0;
 }

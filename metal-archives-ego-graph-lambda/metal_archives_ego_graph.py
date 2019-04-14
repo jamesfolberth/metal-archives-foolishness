@@ -50,7 +50,7 @@ def get_ego_graphs(ego_graphs_filename, database_filename):
     logger.debug("Pickling EgoGraphs to %s", ego_graphs_filename)
     _t = time.time()
     with open(ego_graphs_filename, 'wb') as f:
-        pickle.dump(ego_graphs, f)
+        pickle.dump(ego_graphs, f, protocol=pickle.HIGHEST_PROTOCOL)
     _t = time.time() - _t
     logger.info("Pickling EgoGraphs took %f seconds", _t)
 

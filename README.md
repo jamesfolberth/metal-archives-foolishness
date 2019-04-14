@@ -89,9 +89,7 @@ Move some of the calculations to JS?
 Make a faster version of the ego graph code for use in AWS lambda.
 Can I still pull from sqlite over a network?
 
----
-
-##
+## Trim database a bit
 Trim up the database for just ego graph stuff
 ```
 < schema.sql sqlite3 similarity_database.db
@@ -106,5 +104,19 @@ du -hsc similarity_database.db
 
 sqlite3 similarity_database.db
 ```
+
+## How else to speed up ego graph computation?
+It seems that computing the ego graph is actually pretty fast.
+Most of the time in the Lambda function is spent unpickling the EgoGraphs object.
+It would perhaps be better to represent each node using a small numeric ID (0..N-1)
+and then have a mapping from numeric ID to band name.
+
+The JSON response can still use band names as the node IDs, but internally the EgoGraphs
+can probably save some space by keeping node IDs small.
+Maybe.  Dunno how much bloat is in the NetworkX Graph object.
+
+Probably better to use graph-tool or igraph, assuming they have ego graph and shortest path stuff.
+
+---
 
 `review_thing.py` is just a one-off experiment
