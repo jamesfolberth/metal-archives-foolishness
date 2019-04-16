@@ -78,40 +78,18 @@ function createV4DraggableGraph(svg, graph) {
         .selectAll("link")
         .data(graph.links)
         .enter().append("line")
-        //TODO
-        //.attr("stroke-width", d => d.stroke_width );
-        .attr("stroke-width", 1.5);
 
     var nodes = gDraw.append("g")
         .attr("class", "node")
         .selectAll("node")
         .data(graph.nodes)
         .enter().append("circle")
-        .attr("r", d => d.radius)
-        .on("dblclick", node_double_clicked)
-        .call(d3v4.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
 
     var nodes_text = gDraw.append("g")
         .attr("class", "node_text")
         .selectAll("text")
         .data(graph.nodes)
         .enter().append("text")
-        .attr("x", node => node.radius+2)
-        .attr("y", ".31em")
-        .text(function(d) { return d.name; });
-
-    nodes.append("title")
-        .text(d => d.name);
-
-    links.append("title")
-        .text(function(link) {
-            s = link.source + ' similar to ';
-            s += link.target + ' with ' + link.sim_score + ' votes';
-            return s;
-        })
 
     // initialize properties we'll use for interaction with the nodes & links
     nodes.each(function(node) {
@@ -162,6 +140,13 @@ function createV4DraggableGraph(svg, graph) {
     simulation.force("link")
         .links(graph.links);
 
+    // Shift all node positions over and down a bit
+    // This smooths out the visualization when nodes are added.
+    simulation.tick();
+    for (let node of graph.nodes) {
+        node.x = 0.5*parentWidth;
+        node.y = 0.75*parentHeight;
+    }
 
     function ticked() {
         // update node and line positions at every step of
@@ -443,17 +428,48 @@ function createV4DraggableGraph(svg, graph) {
         // Apply the general update pattern to the nodes.
         nodes = nodes.data(new_nodes, function(d) { return d.id;});
         nodes.exit().remove();
-        nodes = nodes.enter().append("circle").attr("r", d => d.radius).merge(nodes);
+        nodes = nodes
+            .enter()
+            .append("circle")
+            .attr("r", d => d.radius)
+            .merge(nodes)
+            .on("dblclick", node_double_clicked)
+            .call(d3v4.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+
+        nodes.append("title")
+             .text(d => d.name)
 
         // Apply the general update pattern to the links.
         links = links.data(new_links, function(d) { return d.source.id + "-" + d.target.id; });
         links.exit().remove();
-        links = links.enter().append("line").merge(links);
+        links = links
+            .enter()
+            .append("line")
+            //TODO
+            //.attr("stroke-width", d => d.stroke_width );
+            .attr("stroke-width", 1.5)
+            .merge(links);
+
+        links.append("title")
+            .text(function(link) {
+                s = link.source.name + ' similar to ';
+                s += link.target.name + ' with ' + link.sim_score + ' votes';
+                return s;
+            })
 
         // Apply the general update pattern to the nodes_text.
         nodes_text = nodes_text.data(new_nodes, function(d) { return d.id;});
         nodes_text.exit().remove();
-        nodes_text = nodes_text.enter().append("circle").attr("r", d => d.radius).merge(nodes_text);
+        nodes_text = nodes_text
+            .enter()
+            .append("text")
+            .attr("x", node => node.radius+2)
+            .attr("y", ".31em")
+            .text(d => d.name)
+            .merge(nodes_text);
 
         // Update and restart the simulation.
         simulation.nodes(new_nodes)
